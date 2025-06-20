@@ -83,6 +83,10 @@ export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:/usr/local/bin
 export PATH=$PATH:~/.local/bin
 
+# GPG specifications
+GPG_TTY=$(tty)
+export GPG_TTY
+
 # Preferred editor for local and remote sessions
 if [[ -n $SSH_CONNECTION ]]; then
   export EDITOR='vim'
