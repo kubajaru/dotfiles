@@ -1,67 +1,77 @@
-# If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
-
-# Path to your Oh My Zsh installation.
+# ── Oh My Zsh ────────────────────────────────────────────────────────────────
 export ZSH="$HOME/.oh-my-zsh"
-
 ZSH_THEME="agnoster"
+zstyle ':omz:update' mode reminder
 
-# Uncomment one of the following lines to change the auto-update behavior
-# zstyle ':omz:update' mode disabled  # disable automatic updates
-# zstyle ':omz:update' mode auto      # update automatically without asking
-# zstyle ':omz:update' mode reminder  # just remind me to update when it's time
+plugins=(
+  git
+  branch
+  aliases
+  alias-finder
+  common-aliases
+  vi-mode
 
-# Which plugins would you like to load?
-# Standard plugins can be found in $ZSH/plugins/
-# Custom plugins may be added to $ZSH_CUSTOM/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-plugins=(git zsh-autosuggestions kubectl fluxcd aliases alias-finder branch common-aliases docker docker-compose fzf golang helm kubectx ssh terraform tmux ubuntu vi-mode zsh-interactive-cd)
+  zsh-autosuggestions
+  zsh-interactive-cd
+  fzf
 
-source $ZSH/oh-my-zsh.sh
+  kubectl
+  kubectx
+  helm
+  fluxcd
+  terraform
 
-# User configuration
-export MANPATH="/usr/local/man:$MANPATH"
+  docker
+  docker-compose
 
-# PATH configuration
-export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
-export PATH=$PATH:/usr/local/go/bin
-export PATH=$PATH:/usr/local/bin
-export PATH=$PATH:~/.local/bin
+  golang
+  tmux
+  ubuntu
+  ssh
+)
 
-export FZF_DEFAULT_COMMAND="fd --type f"
-export FZF_DEFAULT_OPTS="--preview 'bat --color=always --style=numbers --line-range=:500 {}'"
+source "$ZSH/oh-my-zsh.sh"
 
-# GPG specifications
-GPG_TTY=$(tty)
-export GPG_TTY
+# ── PATH ─────────────────────────────────────────────────────────────────────
+export PATH="$HOME/.local/bin:$PATH"           # bat, fd, jetbrains-toolbox
+export PATH="/usr/local/go/bin:$PATH"          # Go
+export PATH="$HOME/.krew/bin:$PATH"            # kubectl plugins (krew)
+export PATH="/usr/local/bin:$PATH"
 
-# Preferred editor for local and remote sessions
-if [[ -n $SSH_CONNECTION ]]; then
+# ── Editor ───────────────────────────────────────────────────────────────────
+if [[ -n "$SSH_CONNECTION" ]]; then
   export EDITOR='vim'
 else
   export EDITOR='nvim'
 fi
 export KUBE_EDITOR='nvim'
+export MANPATH="/usr/local/man:$MANPATH"
 
-# Compilation flags
-# export ARCHFLAGS="-arch $(uname -m)"
+# ── GPG ──────────────────────────────────────────────────────────────────────
+export GPG_TTY=$(tty)
 
-# Set personal aliases, overriding those provided by Oh My Zsh libs,
-# plugins, and themes. Aliases can be placed here, though Oh My Zsh
-# users are encouraged to define aliases within a top-level file in
-# the $ZSH_CUSTOM folder, with .zsh extension. Examples:
-# - $ZSH_CUSTOM/aliases.zsh
-# - $ZSH_CUSTOM/macos.zsh
-# For a full list of active aliases, run `alias`.
-
-alias zshconfig="mate ~/.zshrc"
-alias ohmyzsh="mate ~/.oh-my-zsh"
-alias ll="ls -lha"
-
-# fzf configuration
+# ── fzf ──────────────────────────────────────────────────────────────────────
+export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow --exclude .git"
+export FZF_DEFAULT_OPTS="
+  --preview 'bat --color=always --style=numbers --line-range=:500 {}'
+  --bind 'ctrl-/:toggle-preview'
+  --height=80% --layout=reverse --border
+"
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_ALT_C_COMMAND="fd --type d --hidden --follow --exclude .git"
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+# ── Aliases ──────────────────────────────────────────────────────────────────
+alias zshconfig="$EDITOR ~/.zshrc"
+alias ohmyzsh="$EDITOR ~/.oh-my-zsh"
+alias ll="ls -lha"
+alias cat="bat --paging=never"
+alias lg="lazygit"
+alias tf="terraform"
+alias tofu="tofu"
+alias k="kubectl"
+alias kctx="kubectl ctx"
+
+# ── SDKMAN (must remain last) ────────────────────────────────────────────────
 export SDKMAN_DIR="$HOME/.sdkman"
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
