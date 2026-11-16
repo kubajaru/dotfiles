@@ -198,7 +198,7 @@ else
 fi
 
 # ── Additional kubectl plugins (via krew) ─────────────────────────────────────
-for KREW_PLUGIN in access-matrix deprecations gadget ktop popeye retina score sniff stern tree kubecm tail radar resource-capacity; do
+for KREW_PLUGIN in access-matrix deprecations gadget ktop popeye retina score sniff stern tree tail radar resource-capacity; do
   if kubectl krew list | grep -Fxq "$KREW_PLUGIN"; then
     warn "kubectl plugin $KREW_PLUGIN already installed — skipping"
   else
