@@ -1,0 +1,60 @@
+plugins:
+  karpenter-nodepool-nodes:
+    shortCut: Shift-N
+    override: true
+    confirm: false
+    description: View nodes
+    scopes:
+      - nodepools
+    command: bash
+    background: false
+    args:
+      - -c
+      - "kubectl get nodes --context $CONTEXT -l karpenter.sh/nodepool=$NAME -o wide | less -K"
+  karpenter-nodepool-nodeclaims:
+    shortCut: Shift-C
+    confirm: false
+    description: View nodeclaims
+    scopes:
+      - nodepools
+    command: bash
+    background: false
+    args:
+      - -c
+      - "kubectl get nodeclaims --context $CONTEXT -l karpenter.sh/nodepool=$NAME -o wide | less -K"
+  karpenter-node-nodepool:
+    shortCut: Shift-P
+    confirm: false
+    description: View nodepool
+    scopes:
+      - nodes
+    command: bash
+    background: false
+    args:
+      - -c
+      - |
+        nodepool=$(kubectl get node --context $CONTEXT $NAME -o jsonpath='{.metadata.labels.karpenter\.sh/nodepool}')
+        if [ -z "$nodepool" ]; then
+          echo "Node $NAME has no karpenter.sh/nodepool label (not Karpenter-managed?)"
+          read -p "Press Enter to return to k9s..."
+        else
+          kubectl get nodepool --context $CONTEXT "$nodepool" -o yaml | less -K
+        fi
+  karpenter-nodeclaim-node:
+    shortCut: n
+    confirm: false
+    description: View node
+    scopes:
+      - nodeclaims
+    command: bash
+    background: false
+    args:
+      - -c
+      - |
+        node=$(kubectl get nodeclaim --context $CONTEXT $NAME -o jsonpath='{.status.nodeName}')
+        if [ -z "$node" ]; then
+          echo "NodeClaim $NAME has no node yet (still provisioning?)"
+          read -p "Press Enter to return to k9s..."
+        else
+          kubectl get node --context $CONTEXT "$node" -o wide | less -K
+        fi
