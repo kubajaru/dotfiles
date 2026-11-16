@@ -9,6 +9,7 @@ plugins=(
   aliases
   alias-finder
   common-aliases
+  colorize
   vi-mode
 
   zsh-autosuggestions
@@ -17,9 +18,12 @@ plugins=(
 
   kubectl
   kubectx
+  k9s
   helm
+  istioctl
   fluxcd
   terraform
+  jfrog
 
   docker
   docker-compose
@@ -71,6 +75,15 @@ alias tf="terraform"
 alias tofu="tofu"
 alias k="kubectl"
 alias kctx="kubectl ctx"
+
+k9s() {
+  if [[ "${1:-}" == edit ]]; then
+    shift
+    command k9s "$@"
+  else
+    command k9s --readonly "$@"
+  fi
+}
 
 # ── SDKMAN (must remain last) ────────────────────────────────────────────────
 export SDKMAN_DIR="$HOME/.sdkman"

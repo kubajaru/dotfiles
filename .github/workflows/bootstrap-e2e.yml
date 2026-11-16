@@ -1,0 +1,64 @@
+name: Bootstrap end-to-end
+
+"on":
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap:
+    name: Ubuntu ${{ matrix.ubuntu }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        ubuntu: ["24.04", "26.04"]
+    container:
+      image: ubuntu:${{ matrix.ubuntu }}
+    steps:
+      - name: Install checkout prerequisites
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates git sudo
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Copy files and run bootstrap
+        shell: bash
+        run: |
+          TEST_ROOT="$(mktemp -d)"
+          mkdir -p "$TEST_ROOT/home" "$TEST_ROOT/dotfiles"
+          cp -a \
+            "$GITHUB_WORKSPACE/.zshrc" \
+            "$GITHUB_WORKSPACE/.tmux.conf" \
+            "$GITHUB_WORKSPACE/bootstrap.sh" \
+            "$GITHUB_WORKSPACE/nvim" \
+            "$GITHUB_WORKSPACE/.k9s" \
+            "$TEST_ROOT/dotfiles/"
+
+          export HOME="$TEST_ROOT/home"
+          export DEBIAN_FRONTEND=noninteractive
+          sh "$TEST_ROOT/dotfiles/bootstrap.sh"
+
+          for executable in kubectl helm k9s terraform tofu istioctl velero go eks-node-viewer nvim lazygit zsh; do
+            command -v "$executable" >/dev/null 2>&1 || {
+              printf 'Expected command not found: %s\n' "$executable" >&2
+              exit 1
+            }
+          done
+          kubectl krew version
+          kubectl ctx --help >/dev/null
+
+          for target in "$HOME/.zshrc" "$HOME/.tmux.conf" "$HOME/.config/nvim" "$HOME/.config/k9s"; do
+            test -L "$target" || {
+              printf 'Expected dotfile symlink not found: %s\n' "$target" >&2
+              exit 1
+            }
+          done

@@ -1,0 +1,28 @@
+plugins:
+  helm-diff-previous:
+    shortCut: Shift-D
+    confirm: false
+    description: Diff with previous revision
+    scopes:
+      - helm
+    command: bash
+    background: false
+    args:
+      - -c
+      - >-
+        last_revision=$(($COL-REVISION-1));
+        helm diff revision $COL-NAME $COL-REVISION $last_revision --kube-context $CONTEXT --namespace $NAMESPACE --color | less -RK
+  helm-diff-current:
+    shortCut: Shift-Q
+    confirm: false
+    description: Diff with current revision
+    scopes:
+      - history
+    command: bash
+    background: false
+    args:
+      - -c
+      - >-
+        release_name=$(echo $NAME | cut -d':' -f1);
+        latest_revision=$(helm history -n $NAMESPACE --kube-context $CONTEXT $release_name | grep deployed | cut -d$'\t' -f1 | tr -d ' \t');
+        helm diff revision $release_name $latest_revision $COL-REVISION --kube-context $CONTEXT --namespace $NAMESPACE --color | less -RK

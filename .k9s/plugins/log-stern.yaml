@@ -1,0 +1,17 @@
+plugins:
+  stern:
+    shortCut: Ctrl-Y
+    confirm: false
+    description: Logs with Stern
+    scopes:
+      - pods
+    command: stern
+    background: false
+    args:
+      - --tail
+      - "1000"
+      - $FILTER
+      - -n
+      - $NAMESPACE
+      - --context
+      - $CONTEXT

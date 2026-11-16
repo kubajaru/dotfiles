@@ -1,0 +1,143 @@
+plugins:
+  argocd-out-of-sync:
+    shortCut: Shift-D
+    description: Argo drift and app health
+    scopes:
+      - applications
+    command: sh
+    background: false
+    confirm: false
+    args:
+      - -c
+      - >-
+        kubectl --context $CONTEXT -n $NAMESPACE get application $NAME -o json |
+        jq -r '"sync: \(.status.sync.status // \"-\")  health: \(.status.health.status // \"-\")  \(.status.health.message // \"\")", (.status.resources[]? | select(.status != "Synced") | "\(.kind)/\(.name)\t\(.status)\t\(.health.status // \"-\")")' |
+        column -t | less -K
+  argocd-why:
+    shortCut: Shift-G
+    description: Argo health and conditions
+    scopes:
+      - applications
+    command: sh
+    background: false
+    confirm: false
+    args:
+      - -c
+      - >-
+        kubectl --context $CONTEXT -n $NAMESPACE get application $NAME -o json |
+        jq -r '"health: \(.status.health.status // \"-\")", "message: \(.status.health.message // \"-\")", "source: \(.status.resourceHealthSource // \"-\")", "", "conditions:", ((.status.conditions // []) | if length > 0 then .[] | "\(.type): \(.message)" else "(none)" end), "", "last operation: \(.status.operationState.phase // \"-\")", "message: \(.status.operationState.message // \"-\")", "revision: \(.status.sync.revision // \"-\")"' |
+        less -K
+  argocd-history:
+    shortCut: Shift-H
+    description: Argo sync history
+    scopes:
+      - applications
+    command: sh
+    background: false
+    confirm: false
+    args:
+      - -c
+      - >-
+        kubectl --context $CONTEXT -n $NAMESPACE get application $NAME -o json |
+        jq -r '.status.history[]? | "\(.id)\t\(.deployedAt)\t\(.revision[0:12])"' |
+        column -t | less -K
+  argocd-refresh:
+    shortCut: Shift-R
+    description: Argo refresh
+    scopes:
+      - applications
+    confirm: true
+    command: kubectl
+    background: false
+    args:
+      - --context
+      - $CONTEXT
+      - -n
+      - $NAMESPACE
+      - annotate
+      - --overwrite
+      - application
+      - $NAME
+      - argocd.argoproj.io/refresh=normal
+  argocd-hard-refresh:
+    shortCut: Shift-Y
+    description: Argo hard refresh
+    confirm: true
+    dangerous: true
+    scopes:
+      - applications
+    command: kubectl
+    background: false
+    args:
+      - --context
+      - $CONTEXT
+      - -n
+      - $NAMESPACE
+      - annotate
+      - --overwrite
+      - application
+      - $NAME
+      - argocd.argoproj.io/refresh=hard
+  argocd-sync:
+    shortCut: Shift-Z
+    description: Argo sync
+    confirm: true
+    dangerous: true
+    scopes:
+      - applications
+    command: sh
+    background: false
+    args:
+      - -c
+      - >-
+        user=$(kubectl --context $CONTEXT auth whoami -o jsonpath='{.status.userInfo.username}') &&
+        kubectl --context $CONTEXT -n $NAMESPACE patch application $NAME --type=merge -p "{\"operation\":{\"initiatedBy\":{\"username\":\"$user\"},\"sync\":{}}}"
+  argocd-disable-auto-sync:
+    shortCut: Shift-K
+    description: Argo disable auto-sync
+    confirm: true
+    dangerous: true
+    scopes:
+      - applications
+    command: kubectl
+    background: false
+    args:
+      - --context
+      - $CONTEXT
+      - -n
+      - $NAMESPACE
+      - patch
+      - application
+      - $NAME
+      - --type=merge
+      - '-p={"spec":{"syncPolicy":{"automated":null}}}'
+  argocd-enable-auto-sync:
+    shortCut: Shift-B
+    description: Argo enable auto-sync
+    confirm: true
+    dangerous: true
+    scopes:
+      - applications
+    inputs:
+      - name: prune
+        label: Prune
+        type: bool
+        required: true
+        default: "true"
+      - name: selfHeal
+        label: Self-heal
+        type: bool
+        required: true
+        default: "true"
+    command: kubectl
+    background: false
+    args:
+      - --context
+      - $CONTEXT
+      - -n
+      - $NAMESPACE
+      - patch
+      - application
+      - $NAME
+      - --type=merge
+      - '-p={"spec":{"syncPolicy":{"automated":{"prune":$INPUT_PRUNE,"selfHeal":$INPUT_SELFHEAL}}}}'

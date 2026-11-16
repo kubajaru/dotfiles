@@ -1,0 +1,7 @@
+k9s:
+  skipLatestRevCheck: true
+  ui:
+    logoless: true
+  logger:
+    tail: 10000
+    textWrap: true
